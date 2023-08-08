@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Functions and API Gateway configuration for Go functions
+Transform:
+- AWS::Serverless-2016-10-31
+
+Parameters:
+  CognitoUserPool:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /todos/user-pool-id
+  CognitoUserPoolClient:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /todos/user-pool-client-id
+  TodoTableName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /todos/todo-table-name
+  TodosLambdaRole:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /todos/lambda-role-arn
+
+Globals:
+  Function:
+    Timeout: 5
+
+Resources:
+
+  TodosApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: todos-go-Api
+      CorsConfiguration: 
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+          - PATCH
+        AllowHeaders: 
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+        AllowOrigins: 
+          - http://localhost:4200
+        AllowCredentials: true
+      Auth:
+        DefaultAuthorizer: OAuth2Authorizer
+        Authorizers:
+          OAuth2Authorizer:
+            JwtConfiguration:
+              issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}'
+              audience:
+                - !Ref CognitoUserPoolClient
+            IdentitySource: $request.header.Authorization
+      Tags:
+        Project: todos
+        Language: go
+
+  GetTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-GetTodos
+      CodeUri: build/get-todos/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Role: !Ref TodosLambdaRole
+      Environment:
+        Variables:
+          TODO_TABLE_NAME: !Ref TodoTableName
+      Tags:
+        Project: todos
+        Language: go
+      Tracing: Disabled
+      Events:
+        GetTodos:
+          Type: HttpApi
+          Properties:
+            Path: /todos
+            Method: get
+            ApiId: !Ref TodosApi
+  
+  GetTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-GetTodo
+      CodeUri: build/get-todo/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Role: !Ref TodosLambdaRole
+      Environment:
+        Variables:
+          TODO_TABLE_NAME: !Ref TodoTableName
+      Tags:
+        Project: todos
+        Language: go
+      Tracing: Disabled
+      Events:
+        GetTodos:
+          Type: HttpApi
+          Properties:
+            Path: /todos/{id}
+            Method: get
+            ApiId: !Ref TodosApi
+
+  CreateTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-CreateTodo
+      CodeUri: build/create-todo/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Role: !Ref TodosLambdaRole
+      Environment:
+        Variables:
+          TODO_TABLE_NAME: !Ref TodoTableName
+      Tags:
+        Project: todos
+        Language: go
+      Tracing: Disabled
+      Events:
+        GetTodos:
+          Type: HttpApi
+          Properties:
+            Path: /todos
+            Method: post
+            ApiId: !Ref TodosApi
+  
+  UpdateTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-UpdateTodo
+      CodeUri: build/update-todo/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Role: !Ref TodosLambdaRole
+      Environment:
+        Variables:
+          TODO_TABLE_NAME: !Ref TodoTableName
+      Tags:
+        Project: todos
+        Language: go
+      Tracing: Disabled
+      Events:
+        GetTodos:
+          Type: HttpApi
+          Properties:
+            Path: /todos/{id}
+            Method: put
+            ApiId: !Ref TodosApi
+  
+  DeleteTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-DeleteTodo
+      CodeUri: build/delete-todo/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Role: !Ref TodosLambdaRole
+      Environment:
+        Variables:
+          TODO_TABLE_NAME: !Ref TodoTableName
+      Tags:
+        Project: todos
+        Language: go
+      Tracing: Disabled
+      Events:
+        GetTodos:
+          Type: HttpApi
+          Properties:
+            Path: /todos/{id}
+            Method: delete
+            ApiId: !Ref TodosApi

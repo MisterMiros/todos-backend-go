@@ -1,0 +1,3 @@
+build/*
+samconfig.toml
+deploy.ps1

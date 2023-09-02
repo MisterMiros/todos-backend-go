@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"go-todos/model"
+	"go-todos/storage/interfaces"
 	"go-todos/storage/storageConfig"
 	"log"
 
@@ -16,7 +17,7 @@ import (
 )
 
 type TodoRepository struct {
-	client    *dynamodb.Client
+	client    interfaces.DynamoClient
 	tableName string
 }
 
@@ -83,7 +84,7 @@ func (repository *TodoRepository) GetTodo(userEmail, id string) (*model.Todo, er
 		return nil, err
 	}
 
-	if (output.Item == nil) {
+	if output.Item == nil {
 		return nil, err
 	}
 
@@ -174,17 +175,4 @@ func (repository *TodoRepository) DeleteTodo(userEmail, id string) error {
 
 func getTodoKey(todo *model.Todo) (map[string]types.AttributeValue, error) {
 	return getKey(todo.UserEmail, todo.Id)
-}
-
-
-func getKey(userEmail, id string) (map[string]types.AttributeValue, error) {
-	userEmailAttr, err := attributevalue.Marshal(userEmail)
-	if err != nil {
-		return nil, err
-	}
-	idAttr, err := attributevalue.Marshal(id)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]types.AttributeValue{"user_email": userEmailAttr, "id": idAttr}, nil
 }

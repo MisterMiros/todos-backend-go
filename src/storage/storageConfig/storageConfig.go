@@ -1,5 +1,6 @@
 package storageConfig
 
 type Config struct {
-	TodoTableName string
+	TodoTableName     string
+	CategoryTableName string
 }

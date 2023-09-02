@@ -13,6 +13,9 @@ Parameters:
   TodoTableName:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /todos/todo-table-name
+  CategoryTableName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /todos/category-table-name
   TodosLambdaRole:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /todos/lambda-role-arn
@@ -20,6 +23,16 @@ Parameters:
 Globals:
   Function:
     Timeout: 5
+    Environment:
+      Variables:
+        TODO_TABLE_NAME: !Ref TodoTableName
+        CATEGORY_TABLE_NAME: !Ref CategoryTableName
+    Tags:
+      Project: todos
+      Language: go
+    Handler: bootstrap
+    Runtime: provided.al2
+    Tracing: Disabled
 
 Resources:
 
@@ -62,21 +75,12 @@ Resources:
     Properties:
       FunctionName: todos-go-GetTodos
       CodeUri: build/get-todos/
-      Handler: bootstrap
-      Runtime: provided.al2
       Role: !Ref TodosLambdaRole
-      Environment:
-        Variables:
-          TODO_TABLE_NAME: !Ref TodoTableName
-      Tags:
-        Project: todos
-        Language: go
-      Tracing: Disabled
       Events:
         GetTodos:
           Type: HttpApi
           Properties:
-            Path: /todos
+            Path: /todo
             Method: get
             ApiId: !Ref TodosApi
   
@@ -85,21 +89,12 @@ Resources:
     Properties:
       FunctionName: todos-go-GetTodo
       CodeUri: build/get-todo/
-      Handler: bootstrap
-      Runtime: provided.al2
       Role: !Ref TodosLambdaRole
-      Environment:
-        Variables:
-          TODO_TABLE_NAME: !Ref TodoTableName
-      Tags:
-        Project: todos
-        Language: go
-      Tracing: Disabled
       Events:
-        GetTodos:
+        GetTodo:
           Type: HttpApi
           Properties:
-            Path: /todos/{id}
+            Path: /todo/{id}
             Method: get
             ApiId: !Ref TodosApi
 
@@ -108,21 +103,12 @@ Resources:
     Properties:
       FunctionName: todos-go-CreateTodo
       CodeUri: build/create-todo/
-      Handler: bootstrap
-      Runtime: provided.al2
       Role: !Ref TodosLambdaRole
-      Environment:
-        Variables:
-          TODO_TABLE_NAME: !Ref TodoTableName
-      Tags:
-        Project: todos
-        Language: go
-      Tracing: Disabled
       Events:
-        GetTodos:
+        CreateTodo:
           Type: HttpApi
           Properties:
-            Path: /todos
+            Path: /todo
             Method: post
             ApiId: !Ref TodosApi
   
@@ -131,21 +117,12 @@ Resources:
     Properties:
       FunctionName: todos-go-UpdateTodo
       CodeUri: build/update-todo/
-      Handler: bootstrap
-      Runtime: provided.al2
       Role: !Ref TodosLambdaRole
-      Environment:
-        Variables:
-          TODO_TABLE_NAME: !Ref TodoTableName
-      Tags:
-        Project: todos
-        Language: go
-      Tracing: Disabled
       Events:
-        GetTodos:
+        UpdateTodo:
           Type: HttpApi
           Properties:
-            Path: /todos/{id}
+            Path: /todo/{id}
             Method: put
             ApiId: !Ref TodosApi
   
@@ -154,20 +131,81 @@ Resources:
     Properties:
       FunctionName: todos-go-DeleteTodo
       CodeUri: build/delete-todo/
-      Handler: bootstrap
-      Runtime: provided.al2
       Role: !Ref TodosLambdaRole
-      Environment:
-        Variables:
-          TODO_TABLE_NAME: !Ref TodoTableName
-      Tags:
-        Project: todos
-        Language: go
-      Tracing: Disabled
       Events:
-        GetTodos:
+        DeleteTodo:
           Type: HttpApi
           Properties:
-            Path: /todos/{id}
+            Path: /todo/{id}
+            Method: delete
+            ApiId: !Ref TodosApi
+  
+  GetCategoriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-GetCategories
+      CodeUri: build/get-categories/
+      Role: !Ref TodosLambdaRole
+      Events:
+        GetCategories:
+          Type: HttpApi
+          Properties:
+            Path: /category
+            Method: get
+            ApiId: !Ref TodosApi
+  
+  GetCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-GetCategory
+      CodeUri: build/get-category/
+      Role: !Ref TodosLambdaRole
+      Events:
+        GetCategories:
+          Type: HttpApi
+          Properties:
+            Path: /category/{id}
+            Method: get
+            ApiId: !Ref TodosApi
+
+  CreateCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-CreateCategory
+      CodeUri: build/create-category/
+      Role: !Ref TodosLambdaRole
+      Events:
+        CreateCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category
+            Method: post
+            ApiId: !Ref TodosApi
+  
+  UpdateCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-UpdateCategory
+      CodeUri: build/update-category/
+      Role: !Ref TodosLambdaRole
+      Events:
+        UpdateCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/{id}
+            Method: put
+            ApiId: !Ref TodosApi
+  
+  DeleteCategoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: todos-go-DeleteCategory
+      CodeUri: build/delete-category/
+      Role: !Ref TodosLambdaRole
+      Events:
+        DeleteCategory:
+          Type: HttpApi
+          Properties:
+            Path: /category/{id}
             Method: delete
             ApiId: !Ref TodosApi

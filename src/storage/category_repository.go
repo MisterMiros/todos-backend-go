@@ -66,7 +66,7 @@ func (repository *CategoryRepository) GetUserCategories(userEmail string) ([]mod
 }
 
 func (repository *CategoryRepository) GetCategory(userEmail, id string) (*model.Category, error) {
-	var todo model.Category
+	var category model.Category
 	key, err := getKey(userEmail, id)
 	if err != nil {
 		log.Printf("Failed to get key for item '%s:%s'. Error: %s\n", userEmail, id, err)
@@ -88,26 +88,26 @@ func (repository *CategoryRepository) GetCategory(userEmail, id string) (*model.
 		return nil, err
 	}
 
-	err = attributevalue.UnmarshalMap(output.Item, &todo)
+	err = attributevalue.UnmarshalMap(output.Item, &category)
 	if err != nil {
 		log.Printf("Failed to unmarshal query response. Error: %v\n", err)
 		return nil, err
 	}
 
-	return &todo, nil
+	return &category, nil
 }
 
-func (repository *CategoryRepository) CreateCategory(userEmail, name string, color string) (*model.Category, error) {
-	todo := model.Category{
+func (repository *CategoryRepository) CreateCategory(userEmail, name, color string) (*model.Category, error) {
+	category := model.Category{
 		UserEmail: userEmail,
 		Id:        uuid.NewString(),
 		Name:      name,
 		Color:     color,
 	}
 
-	item, err := attributevalue.MarshalMap(todo)
+	item, err := attributevalue.MarshalMap(category)
 	if err != nil {
-		log.Printf("Failed to marshal item '%v'. Error: %s\n", todo, err)
+		log.Printf("Failed to marshal item '%v'. Error: %s\n", category, err)
 		return nil, err
 	}
 
@@ -117,10 +117,10 @@ func (repository *CategoryRepository) CreateCategory(userEmail, name string, col
 	}
 	_, err = repository.client.PutItem(context.TODO(), &input)
 	if err != nil {
-		log.Printf("Failed to put item '%v'. Error: %s\n", todo, err)
+		log.Printf("Failed to put item '%v'. Error: %s\n", category, err)
 		return nil, err
 	}
-	return &todo, nil
+	return &category, nil
 }
 
 func (repository *CategoryRepository) UpdateCategory(category *model.Category) error {

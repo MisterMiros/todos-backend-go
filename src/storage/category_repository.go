@@ -21,7 +21,7 @@ type CategoryRepository struct {
 	tableName string
 }
 
-func NewCategoryRepository(cnf storageConfig.Config) (*CategoryRepository, error) {
+func NewCategoryRepository(cnf *storageConfig.Config) (*CategoryRepository, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Printf("unable to load SDK config, %v", err)
@@ -85,7 +85,7 @@ func (repository *CategoryRepository) GetCategory(userEmail, id string) (*model.
 	}
 
 	if output.Item == nil {
-		return nil, err
+		return nil, nil
 	}
 
 	err = attributevalue.UnmarshalMap(output.Item, &category)

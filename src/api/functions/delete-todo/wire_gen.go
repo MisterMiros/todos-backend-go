@@ -20,7 +20,11 @@ func InitializeHandler() (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	todoService := domain.NewTodoService(todoRepository)
+	categoryRepository, err := storage.NewCategoryRepository(config)
+	if err != nil {
+		return nil, err
+	}
+	todoService := domain.NewTodoService(todoRepository, categoryRepository)
 	handler := NewHandler(todoService)
 	return handler, nil
 }

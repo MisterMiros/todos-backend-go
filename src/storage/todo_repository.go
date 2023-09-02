@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"go-todos/model"
 	"go-todos/storage/interfaces"
 	"go-todos/storage/storageConfig"
@@ -85,7 +86,7 @@ func (repository *TodoRepository) GetTodo(userEmail, id string) (*model.Todo, er
 	}
 
 	if output.Item == nil {
-		return nil, err
+		return nil, nil
 	}
 
 	err = attributevalue.UnmarshalMap(output.Item, &todo)
@@ -97,12 +98,13 @@ func (repository *TodoRepository) GetTodo(userEmail, id string) (*model.Todo, er
 	return &todo, nil
 }
 
-func (repository *TodoRepository) CreateTodo(userEmail, title string) (*model.Todo, error) {
+func (repository *TodoRepository) CreateTodo(userEmail, title, categoryId string) (*model.Todo, error) {
 	todo := model.Todo{
-		UserEmail: userEmail,
-		Id:        uuid.NewString(),
-		Title:     title,
-		Completed: false,
+		UserEmail:  userEmail,
+		Id:         uuid.NewString(),
+		Title:      title,
+		Completed:  false,
+		CategoryId: categoryId,
 	}
 
 	item, err := attributevalue.MarshalMap(todo)
@@ -168,6 +170,24 @@ func (repository *TodoRepository) DeleteTodo(userEmail, id string) error {
 	_, err = repository.client.DeleteItem(context.TODO(), input)
 	if err != nil {
 		log.Printf("Failed to delete item '%s:%s'. Error: %s\n", userEmail, id, err)
+		return err
+	}
+	return nil
+}
+
+func (repository *TodoRepository) ClearCategory(userEmail, categoryId string) error {
+	params, err := attributevalue.MarshalList([]interface{}{userEmail, categoryId})
+	if err != nil {
+		panic(err)
+	}
+	_, err = repository.client.ExecuteStatement(context.TODO(), &dynamodb.ExecuteStatementInput{
+		Statement: aws.String(
+			fmt.Sprintf("UPDATE \"%v\" SET category_id=\"\" WHERE user_email=? AND category_id=?",
+				repository.tableName)),
+		Parameters: params,
+	})
+	if err != nil {
+		log.Printf("Failed to clear category '%s:%s'. Error: %s\n", userEmail, categoryId, err)
 		return err
 	}
 	return nil

@@ -6,17 +6,19 @@ import (
 )
 
 type CategoryService struct {
-	repository *storage.CategoryRepository
+	categoryRepository *storage.CategoryRepository
+	todoRepository     *storage.TodoRepository
 }
 
-func NewCategoryService(repository *storage.CategoryRepository) *CategoryService {
+func NewCategoryService(categoryRepository *storage.CategoryRepository, todoRepository *storage.TodoRepository) *CategoryService {
 	return &CategoryService{
-		repository: repository,
+		categoryRepository: categoryRepository,
+		todoRepository: todoRepository,
 	}
 }
 
 func (service *CategoryService) GetUserCategories(userEmail string) ([]model.Category, *ServiceError) {
-	categorys, err := service.repository.GetUserCategories(userEmail)
+	categorys, err := service.categoryRepository.GetUserCategories(userEmail)
 	if err != nil {
 		return []model.Category{}, NewInternalError(err)
 	}
@@ -24,7 +26,7 @@ func (service *CategoryService) GetUserCategories(userEmail string) ([]model.Cat
 }
 
 func (service *CategoryService) GetCategory(userEmail, id string) (*model.Category, *ServiceError) {
-	category, err := service.repository.GetCategory(userEmail, id)
+	category, err := service.categoryRepository.GetCategory(userEmail, id)
 	if err != nil {
 		return nil, NewInternalError(err)
 	}
@@ -35,7 +37,7 @@ func (service *CategoryService) GetCategory(userEmail, id string) (*model.Catego
 }
 
 func (service *CategoryService) CreateCategory(userEmail, name, color string) (*model.Category, *ServiceError) {
-	category, err := service.repository.CreateCategory(userEmail, name, color)
+	category, err := service.categoryRepository.CreateCategory(userEmail, name, color)
 	if err != nil {
 		return nil, NewInternalError(err)
 	}
@@ -43,7 +45,7 @@ func (service *CategoryService) CreateCategory(userEmail, name, color string) (*
 }
 
 func (service *CategoryService) UpdateCategory(category *model.Category) *ServiceError {
-	existingCategory, err := service.repository.GetCategory(category.UserEmail, category.Id)
+	existingCategory, err := service.categoryRepository.GetCategory(category.UserEmail, category.Id)
 	if err != nil {
 		return NewInternalError(err)
 	}
@@ -51,7 +53,7 @@ func (service *CategoryService) UpdateCategory(category *model.Category) *Servic
 		return NewNotFound()
 	}
 
-	err = service.repository.UpdateCategory(category)
+	err = service.categoryRepository.UpdateCategory(category)
 	if err != nil {
 		return NewInternalError(err)
 	}
@@ -60,7 +62,11 @@ func (service *CategoryService) UpdateCategory(category *model.Category) *Servic
 }
 
 func (service *CategoryService) DeleteCategory(userEmail, id string) *ServiceError {
-	err := service.repository.DeleteCategory(userEmail, id)
+	err := service.todoRepository.ClearCategory(userEmail, id)
+	if err != nil {
+		return NewInternalError(err)
+	}
+	err = service.categoryRepository.DeleteCategory(userEmail, id)
 	if err != nil {
 		return NewInternalError(err)
 	}

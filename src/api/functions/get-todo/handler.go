@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-todos/api/apimodels"
 	"go-todos/api/utils"
 	"go-todos/api/utils/responses"
 	"go-todos/domain"
@@ -37,5 +38,5 @@ func (handler *Handler) Handle(event events.APIGatewayProxyRequest) (*events.API
 		log.Printf("Failed to get todo. Error: %v\n", serviceErr)
 		return utils.ResponseFromServiceError(serviceErr)
 	}
-	return responses.Ok(todo)
+	return responses.Ok(apimodels.NewTodo(todo))
 }

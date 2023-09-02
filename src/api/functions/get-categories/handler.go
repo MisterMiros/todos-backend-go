@@ -11,12 +11,12 @@ import (
 )
 
 type Handler struct {
-	todoService *domain.TodoService
+	categoryService *domain.CategoryService
 }
 
-func NewHandler(todoService *domain.TodoService) *Handler {
+func NewHandler(categoryService *domain.CategoryService) *Handler {
 	return &Handler{
-		todoService: todoService,
+		categoryService: categoryService,
 	}
 }
 
@@ -27,11 +27,10 @@ func (handler *Handler) Handle(event events.APIGatewayProxyRequest) (*events.API
 		return responses.BadRequest("Failed to parse authorizer context")
 	}
 
-	log.Printf("Getting list of todos for user '%v'\n", email)
-	todos, serviceErr := handler.todoService.GetUserTodos(email)
+	categories, serviceErr := handler.categoryService.GetUserCategories(email)
 	if serviceErr != nil {
-		log.Printf("Failed to get user todos. Error: %v\n", serviceErr)
+		log.Printf("Failed to get categories. Error: %v", serviceErr)
 		return utils.ResponseFromServiceError(serviceErr)
 	}
-	return responses.Ok(apimodels.NewTodos(todos))
+	return responses.Ok(apimodels.NewCategories(categories))
 }

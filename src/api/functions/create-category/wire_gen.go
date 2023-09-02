@@ -16,15 +16,15 @@ import (
 
 func InitializeHandler() (*Handler, error) {
 	config := utils.NewStorageConfig()
-	todoRepository, err := storage.NewTodoRepository(config)
-	if err != nil {
-		return nil, err
-	}
 	categoryRepository, err := storage.NewCategoryRepository(config)
 	if err != nil {
 		return nil, err
 	}
-	todoService := domain.NewTodoService(todoRepository, categoryRepository)
-	handler := NewHandler(todoService)
+	todoRepository, err := storage.NewTodoRepository(config)
+	if err != nil {
+		return nil, err
+	}
+	categoryService := domain.NewCategoryService(categoryRepository, todoRepository)
+	handler := NewHandler(categoryService)
 	return handler, nil
 }

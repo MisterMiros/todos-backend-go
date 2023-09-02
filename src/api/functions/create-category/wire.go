@@ -12,6 +12,6 @@ import (
 )
 
 func InitializeHandler() (*Handler, error) {
-	wire.Build(utils.NewStorageConfig, storage.NewTodoRepository, storage.NewCategoryRepository, domain.NewTodoService, NewHandler)
+	wire.Build(utils.NewStorageConfig, storage.NewTodoRepository, storage.NewCategoryRepository, domain.NewCategoryService, NewHandler)
 	return &Handler{}, nil
 }

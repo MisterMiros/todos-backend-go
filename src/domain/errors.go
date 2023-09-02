@@ -6,6 +6,7 @@ type ErrorKind int
 
 const (
 	NotFound ErrorKind = iota
+	BadRequest
 	InternalError
 )
 
@@ -21,6 +22,9 @@ func (err *ServiceError) Error() string {
 	if err.Kind == InternalError {
 		return fmt.Sprintf("internal error: %v", err.Message)
 	}
+	if err.Kind == BadRequest {
+		return fmt.Sprintf("bad request: %v", err.Message)
+	}
 	panic("unknown error kind")
 }
 
@@ -33,6 +37,13 @@ func NewNotFound() *ServiceError {
 func NewInternalError(message error) *ServiceError {
 	return &ServiceError{
 		Kind:    InternalError,
+		Message: message,
+	}
+}
+
+func NewBadRequest(message error) *ServiceError {
+	return &ServiceError{
+		Kind:    BadRequest,
 		Message: message,
 	}
 }

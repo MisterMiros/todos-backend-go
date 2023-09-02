@@ -6,6 +6,7 @@ import (
 	"go-todos/api/utils"
 	"go-todos/api/utils/responses"
 	"go-todos/domain"
+	"go-todos/model"
 	"log"
 	"strings"
 
@@ -13,12 +14,12 @@ import (
 )
 
 type Handler struct {
-	todoService *domain.TodoService
+	categoryService *domain.CategoryService
 }
 
-func NewHandler(todoService *domain.TodoService) *Handler {
+func NewHandler(categoryService *domain.CategoryService) *Handler {
 	return &Handler{
-		todoService: todoService,
+		categoryService: categoryService,
 	}
 }
 
@@ -29,22 +30,35 @@ func (handler *Handler) Handle(event events.APIGatewayProxyRequest) (*events.API
 		return responses.BadRequest("Failed to parse authorizer context")
 	}
 
-	var body apimodels.CreateTodoRequest
+	id, err := utils.GetId(event)
+	if err != nil {
+		log.Printf("Failed to get category 'id'. Error: %v", err)
+		return responses.BadRequest("Failed to get category 'id'")
+	}
+
+	var body apimodels.UpdateCategoryRequest
 	err = json.Unmarshal([]byte(event.Body), &body)
 	if err != nil {
 		log.Printf("Failed to parse request body. Error: %v", err)
 		return responses.InternalError("Failed to parse request body")
 	}
-	body.Title = strings.TrimSpace(body.Title)
+	body.Name = strings.TrimSpace(body.Name)
 
-	if len(body.Title) == 0 {
-		return responses.BadRequest("Can't create item with an empty title")
+	if body.Name == "" {
+		return responses.BadRequest("Can't set empty name to category")
 	}
 
-	todo, serviceErr := handler.todoService.CreateTodo(email, body.Title, body.CategoryId)
+	category := model.Category {
+		UserEmail: email,
+		Id: id,
+		Name: body.Name,
+		Color: body.Color,
+	}
+
+	serviceErr := handler.categoryService.UpdateCategory(&category)
 	if serviceErr != nil {
-		log.Printf("Failed to create todo. Error: %v", serviceErr)
+		log.Printf("Failed to update category. Error: %v", serviceErr)
 		return utils.ResponseFromServiceError(serviceErr)
 	}
-	return responses.Ok(apimodels.NewTodo(todo))
+	return responses.NoContent()
 }
